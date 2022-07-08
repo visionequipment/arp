@@ -1,96 +1,59 @@
-# <TITLE>
+# Agile Robotized Processing (ARP)
 
-[![License: MIT](https://img.shields.io/github/license/ramp-eu/TTE.project1.svg)](https://opensource.org/licenses/MIT)
-[![Docker badge](https://img.shields.io/docker/pulls/ramp-eu/TTE.project1.svg)](https://hub.docker.com/r/<org>/<repo>/)
-<br/>
-[![Documentation Status](https://readthedocs.org/projects/tte-project1/badge/?version=latest)](https://tte-project1.readthedocs.io/en/latest/?badge=latest)
-[![CI](https://github.com/ramp-eu/TTE.project1/workflows/CI/badge.svg)](https://github.com/ramp-eu/TTE.project1/actions?query=workflow%3ACI)
-[![Coverage Status](https://coveralls.io/repos/github/ramp-eu/TTE.project1/badge.svg?branch=master)](https://coveralls.io/github/ramp-eu/TTE.project1?branch=master)
-[![Codacy grade](https://img.shields.io/codacy/grade/99310c5c4332439197633912a99d2e3c)](https://app.codacy.com/manual/jason-fox/TTE.project1)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4187/badge)](https://bestpractices.coreinfrastructure.org/projects/4187)
-
-```text
-
-The Badges above demonstrate testing, code coverage
-and commitment to coding standards (since the code is linted on commit).
-
-The links need to be amended to point to the correct repo.
-
-Sign up for:
-
-- CI Test system - e.g. GitHub Actions, Travis
-- A Documentation website - e.g. ReadTheDocs
-- Static Code Analysis tool - e.g. Codacy
-- CII Best Practices https://bestpractices.coreinfrastructure.org
-
-Only CII Best Practices (and its badge) is mandatory. Any equivalent public automated tools for the other three may be used.
-
-Note that the CII Best Practices questionaire will request evidence of tooling used.
-
-```
-
-```text
-One or two sentence preamble describing the element
-```
-
-## Contents
-
-- [<TITLE>](#title)
-  - [Contents](#contents)
-  - [Background](#background)
-  - [Install](#install)
-  - [Usage](#usage)
-  - [API](#api)
-  - [Testing](#testing)
-  - [License](#license)
+This repository contains the ROSE-AP component (TrackGen) and other components developed for the TTE.
 
 ## Background
+TrackGen processes point clouds and returns trajectories for a Target application.
 
-```text
-Background information and links to relevant terms
-```
+The base RAMP IoT platform consists of the following components:
+- a tailored FIWARE connector which is called “Vision System” and generates data;
+- a local instance of FIWARE Orion Context Broker, which is ready and runs in the plant. The database MongoDB stores the NGSI entities that come from the context broker;
+- a local instance of FIWARE QuantumLeap as historical data connector to feed a CrateDB, a local data historian.
 
 ## Install
 
-```text
-How to install the component
+Prerequisites:
 
-Information about how to install the <Name of component> can be found at the corresponding section of the
-[Installation & Administration Guide](docs/installationguide.md).
+- Deployment requires Docker Compose.
+- During initial installation, internet access is required in order to download application requirements.
 
-A `Dockerfile` is also available for your use - further information can be found [here](docker/README.md)
+- Execute the following commands to build TrackGen image from source:
+    ```sh
+    cd src
+    docker build -f ..\docker\Dockerfile . -t trackgen
+    ```
 
-```
+- Configure parameters in ```docker-compose.yml``` file (docker folder) and run it:
+    ```sh
+    cd docker
+    docker-compose up -d
+    ```
 
 ## Usage
 
-```text
-How to use the component
+To start using TrackGen, the user must enstablish at least three FIWARE subscriptions:
+- subscription for the PointCloud entities (Orion must forward them to TrackGen);
+- subscription for the area parameter of the Device entities (Orion must forward them to TrackGen);
+- subscription for the Measurement entities (Orion must forward them to the Target application).
 
-Information about how to use the <Name of component> can be found in the [User & Programmers Manual](docs/usermanual.md).
+A simple python script to communicate subscriptions to the FIWARE Orion context broker is provided. 
+Orion default port is setted. To run it:
 
-The following features are listed as [deprecated](docs/deprecated.md).
+```sh
+cd src/utils
+python subscriptions.py
 ```
 
-## API
+After subscriptions are created, the user can generate point clouds and send them as NGSI entities to the Orion context broker.
 
-```text
-Definition of the API interface:
+TrackGen will receive the NGSI entities from the Orion context broker and answer with NGSI Measurement entities, that are the output trajectories. 
+The Orion context broker will forward the NGSI Measurement entities to the Target application.
 
-Information about the API of  the <Name of component> can be found in the [API documentation](docs/api.md).
-
-```
-
-## Testing
-
-```text
-How to test the component
-
-For performing a basic end-to-end test, you have to follow the step below. A detailed description about how to run tests can be found [here].
-
-> npm test
-
-```
+The simple python script ```simple_vision_system.py``` can be run to simulate the execution flow as it follows:
+```sh
+cd src/utils
+python simple_vision_system.py
+```  
 
 ## License
 

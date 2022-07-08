@@ -1,0 +1,76 @@
+version: "2"
+
+services:
+
+    mongo:
+        image: mongo:4.2
+        hostname: mongo
+        container_name: mongo-db
+        networks: 
+            - fiware_default
+        expose:
+            - '27017'
+        ports:
+            - "27017:27017"
+        command: --bind_ip_all
+
+    orion:
+        image: fiware/orion
+        hostname: orion
+        container_name: fiware-orion
+        networks:
+            - fiware_default
+        ports:
+            - "1026:1026"
+        command: -dbhost mongo-db
+        
+    crate-db:
+        image: crate:4.1.4
+        hostname: crate-db
+        container_name: crate-db
+        command: crate -Cauth.host_based.enabled=false -Ccluster.name=cluster -Chttp.cors.enabled=false -Chttp.cors.allow-origin="*"
+        environment:
+            - CRATE_HEAP_SIZE=2g
+        ports:
+            # Admin UI
+            - "4200:4200"
+            # Transport protocol
+            - "4300:4300"
+            - "5432:5432"
+        networks: 
+            - fiware_default
+
+    quantumleap:
+        hostname: quantumleap
+        image: smartsdk/quantumleap:latest
+        depends_on:
+            - crate-db
+        container_name: fiware-quantumleap
+        ports:
+            - "8668:8668"
+        environment:
+            - CRATE_HOST=crate-db
+            - CRATE_PORT=4200
+        networks:
+            - fiware_default
+
+    trackgen:
+        hostname: trackgen
+        image: trackgen
+        container_name: trackgen
+        ports:
+            - '5050:5050'
+        depends_on:
+            - orion
+        environment:
+            - ORION_HOST=orion
+            - TRACKGEN_PORT=5050
+        networks:
+            - fiware_default
+        restart: always
+
+
+networks:
+    
+    fiware_default:
+        external: false
