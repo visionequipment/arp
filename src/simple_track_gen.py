@@ -32,30 +32,30 @@ def process_points(data):
             else:
                 rows[p["x"]] = [p["y"]]
                 pts[(p["x"], p["y"])] = p["z"]
-    print(rows)
-    traj = []
+
+    # Iterate over not-empty rows and select only significant points (contours)
     is_reverse = False
-    total_time = 0
-    last_point = None
+    points = []
     for r in rows:
         if len(rows[r]) == 1:
-            step_time = 0 if last_point is None else compute_time([r, rows[r][0], pts[r, rows[r][0]]], last_point)
-            traj.append({"x": r, "y": rows[r][0], "z": pts[r, rows[r][0]], "time": step_time})
-            total_time += step_time
-            last_point = [r, rows[r][0], pts[r, rows[r][0]]]
+            points.append([r, rows[r][0], pts[r, rows[r][0]]])
         else:
             cur_row = sorted(rows[r]) if not is_reverse else list(reversed(sorted(rows[r])))
             # Add first point of the row to trajectory
-            step_time = 0 if last_point is None else compute_time([r, cur_row[0], pts[r, cur_row[0]]], last_point)
-            traj.append({"x": r, "y": cur_row[0], "z": pts[r, cur_row[0]], "time": step_time})
-            total_time += step_time
-            last_point = [r, cur_row[0], pts[r, cur_row[0]]]
+            points.append([r, cur_row[0], pts[r, cur_row[0]]])
             # Add last point of the row to trajectory
-            step_time = 0 if last_point is None else compute_time([r, cur_row[-1], pts[r, cur_row[-1]]], last_point)
-            traj.append({"x": r, "y": cur_row[-1], "z": pts[r, cur_row[-1]], "time": step_time})
-            total_time += step_time
-            last_point = [r, cur_row[-1], pts[r, cur_row[-1]]]
+            points.append([r, cur_row[-1], pts[r, cur_row[-1]]])
             is_reverse = not is_reverse
+
+    # Iterate over points to generate final trajectory
+    traj = []
+    total_time = 0
+    last_point = None
+    for p in points:
+        step_time = 0 if last_point is None else compute_time(p, last_point)
+        traj.append({"x": p[0], "y": p[1], "z": p[2], "time": step_time})
+        total_time += step_time
+        last_point = p
     return traj, total_time
 
 
