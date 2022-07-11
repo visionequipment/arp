@@ -9,15 +9,15 @@ from entities import Measurement
 
 app = Flask(__name__)
 
-hostname = None #os.environ['ORION_HOST']
-port = None #os.environ["TRACKGEN_PORT"]
+hostname = os.environ['ORION_HOST']
+port = os.environ["TRACKGEN_PORT"]
 
 working_area = None
-robot_speed = 20
+robot_speed = None
 
 
 def compute_time(pa, pb):
-    return math.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2)/robot_speed
+    return math.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2) / robot_speed
 
 
 def process_points(data):
