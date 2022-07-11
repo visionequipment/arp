@@ -9,11 +9,11 @@ from entities import Measurement
 
 app = Flask(__name__)
 
-hostname = os.environ['ORION_HOST']
-port = os.environ["TRACKGEN_PORT"]
+hostname = None #os.environ['ORION_HOST']
+port = None #os.environ["TRACKGEN_PORT"]
 
 working_area = None
-robot_speed = None
+robot_speed = 20
 
 
 def compute_time(pa, pb):
@@ -36,10 +36,17 @@ def process_points(data):
     # Iterate over not-empty rows and select only significant points (contours)
     is_reverse = False
     points = []
+    r_pts = []
+    l_pts = []
     for r in rows:
         if len(rows[r]) == 1:
-            points.append([r, rows[r][0], pts[r, rows[r][0]]])
+            cur_pnt = [r, rows[r][0], pts[r, rows[r][0]]]
+            points.append(cur_pnt)
+            r_pts.append(cur_pnt)
+            l_pts.append(cur_pnt)
         else:
+            r_pts.append([r, rows[r][0], pts[r, rows[r][0]]])
+            l_pts.append([r, rows[r][-1], pts[r, rows[r][-1]]])
             cur_row = sorted(rows[r]) if not is_reverse else list(reversed(sorted(rows[r])))
             # Add first point of the row to trajectory
             points.append([r, cur_row[0], pts[r, cur_row[0]]])
@@ -47,11 +54,28 @@ def process_points(data):
             points.append([r, cur_row[-1], pts[r, cur_row[-1]]])
             is_reverse = not is_reverse
 
-    # Iterate over points to generate final trajectory
+    # Iterate over points to generate first part of the trajectory (surface)
     traj = []
     total_time = 0
     last_point = None
     for p in points:
+        step_time = 0 if last_point is None else compute_time(p, last_point)
+        traj.append({"x": p[0], "y": p[1], "z": p[2], "time": step_time})
+        total_time += step_time
+        last_point = p
+
+    # Sort points with respect to the last point of the surface trajectory
+    pts = r_pts.copy()
+    pts.extend(list(reversed(l_pts)))
+    i = 0
+    for i in range(len(pts)):
+        if pts[i] == last_point:
+            break
+    b_pts = pts[i:]
+    b_pts.extend(pts[:i+1])
+
+    # Iterate over points to generate second part of the trajectory (borders)
+    for p in b_pts:
         step_time = 0 if last_point is None else compute_time(p, last_point)
         traj.append({"x": p[0], "y": p[1], "z": p[2], "time": step_time})
         total_time += step_time
