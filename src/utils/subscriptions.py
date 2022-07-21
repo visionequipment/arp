@@ -19,7 +19,7 @@ if __name__ == "__main__":
                 "condition": {"attrs": ["outputTrajectory"]}},
              "url": "http://host.docker.internal:5500/notify/", "attrs": "outputTrajectory"},
 
-            {"description": "Notify TrackGen of new working area coordinates", "subject": {
+            {"description": "Notify TrackGen of new robot speed", "subject": {
                 "entities": [{"idPattern": ".*ROBOT.*", "type": "Device"}],
                 "condition": {"attrs": ["extraParameters"]}},
              "url": "http://trackgen:5050/area/", "attrs": "extraParameters"}]

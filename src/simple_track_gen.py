@@ -2,6 +2,7 @@ import os
 import json
 import math
 import requests
+from loguru import logger
 from flask import Flask, request
 from concurrent.futures import ThreadPoolExecutor
 
@@ -12,17 +13,23 @@ app = Flask(__name__)
 hostname = os.environ['ORION_HOST']
 port = os.environ["TRACKGEN_PORT"]
 
-working_area = None
 robot_speed = None
+
+MOVE_FROM_SURFACE_TO_SIDE_CONST = 0.0001
+MOVE_FROM_SIDE_TO_SIDE_CONST = 0.0002
 
 
 def compute_time(pa, pb):
-    return math.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2) / robot_speed
+    return math.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2)/robot_speed
 
 
 def process_points(data):
     pts = {}
     rows = {}
+    min_x = None
+    min_y = None
+    max_x = None
+    max_y = None
     # Iterate over all points and select only those with z other than 0
     for p in data:
         if p["z"] != 0:
@@ -32,6 +39,14 @@ def process_points(data):
             else:
                 rows[p["x"]] = [p["y"]]
                 pts[(p["x"], p["y"])] = p["z"]
+        if min_x is None or p["x"] < min_x:
+            min_x = p["x"]
+        if min_y is None or p["y"] < min_y:
+            min_y = p["y"]
+        if max_x is None or p["x"] > max_x:
+            max_x = p["x"]
+        if max_y is None or p["y"] > max_y:
+            max_y = p["y"]
 
     # Iterate over not-empty rows and select only significant points (contours)
     is_reverse = False
@@ -57,40 +72,47 @@ def process_points(data):
     # Iterate over points to generate first part of the trajectory (surface)
     traj = []
     total_time = 0
-    last_point = None
+    lp = None
     for p in points:
-        step_time = 0 if last_point is None else compute_time(p, last_point)
+        step_time = 0 if lp is None else compute_time(p, lp)
         traj.append({"x": p[0], "y": p[1], "z": p[2], "time": step_time})
         total_time += step_time
-        last_point = p
+        lp = p
 
     # Sort points with respect to the last point of the surface trajectory
     pts = r_pts.copy()
     pts.extend(list(reversed(l_pts)))
     i = 0
     for i in range(len(pts)):
-        if pts[i] == last_point:
+        if pts[i] == lp:
             break
     b_pts = pts[i:]
     b_pts.extend(pts[:i+1])
 
     # Iterate over points to generate second part of the trajectory (borders)
-    for p in b_pts:
-        step_time = 0 if last_point is None else compute_time(p, last_point)
+    for i, p in enumerate(b_pts):
+        step_time = 0 if lp is None else compute_time(p, lp)
+        # If step_time = 0, then send command to move from surface to side
+        if step_time == 0:
+            step_time = MOVE_FROM_SURFACE_TO_SIDE_CONST
+        # If current and last point are external, then send command to move from one side to the other
+        elif p != lp and \
+                (p[0] == lp[0] == min_x or p[1] == lp[1] == min_y or p[0] == lp[0] == max_x or p[1] == lp[1] == max_y):
+            step_time = MOVE_FROM_SIDE_TO_SIDE_CONST
         traj.append({"x": p[0], "y": p[1], "z": p[2], "time": step_time})
         total_time += step_time
-        last_point = p
+        lp = p
     return traj, total_time
 
 
 def return_trajectory(pointcloud):
-    print(f"Data received: {pointcloud}")
+    logger.info(f"Data received: {pointcloud}")
     trajectory, total_est_time = process_points(pointcloud["data"][0]["pointCloud"]["value"])
     data = meas.get(trajectory, pointcloud["data"][0]["id"], total_est_time)
-    print(f"Resulting trajectory: {data}")
+    logger.info(f"Resulting trajectory: {data}")
     re = requests.post("http://" + hostname + ":1026/v2/entities/", data=json.dumps(data),
                        headers={"content-type": "application/json"})
-    print(re.content.decode('UTF-8'))
+    logger.info(re.content.decode('UTF-8'))
 
 
 @app.route("/notify/", methods=['POST'])
@@ -100,20 +122,17 @@ def notify():
     return "OK"
 
 
-@app.route("/area/", methods=['POST'])
+@app.route("/speed/", methods=['POST'])
 def area():
-    global working_area
     global robot_speed
     data = request.get_json()
-    working_area = data["data"][0]['extraParameters']["value"][0]["value"]
     robot_speed = data["data"][0]['extraParameters']["value"][1]["value"]
-    print(f"New area: {working_area}")
-    print(f"New speed: {robot_speed}")
+    logger.info(f"New speed: {robot_speed}")
     return "OK"
 
 
 if __name__ == "__main__":
     count = 0
-    print(hostname)
+    logger.info(hostname)
     meas = Measurement()
     app.run(host="0.0.0.0", port=port)
