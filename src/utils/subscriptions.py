@@ -22,7 +22,7 @@ if __name__ == "__main__":
             {"description": "Notify TrackGen of new robot speed", "subject": {
                 "entities": [{"idPattern": ".*ROBOT.*", "type": "Device"}],
                 "condition": {"attrs": ["extraParameters"]}},
-             "url": "http://trackgen:5050/area/", "attrs": "extraParameters"}]
+             "url": "http://trackgen:5050/speed/", "attrs": "extraParameters"}]
 
     for s in subs:
         sub = {
