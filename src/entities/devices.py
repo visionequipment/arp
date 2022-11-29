@@ -75,3 +75,10 @@ class OrbitalSander(Device):
 
     def __init__(self, name, sn, brand, model):
         super().__init__("OrbitalSander", "Orbital Sander", name, sn, brand, model)
+
+    def get(self):
+        res = super().get()
+        res["diameter"] = {
+                "type": "Float",
+                "value": float(125)}
+        return res

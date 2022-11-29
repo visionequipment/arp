@@ -1,85 +1,66 @@
-# Mid-Term Review
+# Agile Robotized Processing (ARP)
 
-## Contents
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Documentation Status](https://readthedocs.org/projects/arp/badge/?version=latest)](https://arp.readthedocs.io/en/latest)
 
--   [Background](#background)
-    -   [Use Case Description](#use-case-description)
-    -   [Proposed Solution](#proposed-solution)
--   [Mid-Term Setup Implementation Description](#mid-term-setup-implementation-description)
--   [Demo](#demo)
-    -   [Install](#install)
-    -   [Usage](#usage)
-    -   [API](#api)
-    -   [Testing](#testing)
--   [License](#license)
+This project is part of [DIH^2](http://www.dih-squared.eu/). For more information check the RAMP Catalogue entry for the components.
+This repository contains the ROSE-AP component (TrackGen) and other components developed for the TTE.
+
+| :books: [Documentation](https://arp.readthedocs.io/en/latest) |
+| --------------------------------------------- | 
+
 
 ## Background
 
-#### Use Case Description
+### Application Domain
 
-#### Proposed Solution
+Sanding of wooden panels for the furniture industry.
 
-## Setup Overview
-```
-Overview the Docker-Based Implementation contributed in this Setup (This section is associated with the slide "Setup Overview: Docker-based Implementation" in D3)
-```
+### Use Case Needs / Agility Challenge Description
 
-#### Architecture
-A more detailed description of this architecture is available here [Architecture Description](architecture.md)
-```
-(This section is associated with the slide "Setup Overview: Architecture" in D3)
-```
+Use Case Needs: Panels in different shapes and sizes need to be processed from the top and from the sides as part of preparation 
+of the surface for different types of finish. Processing is done manually due to lack of flexible solutions which can 
+easily adapt to frequently changing production in a user friendly way.
 
-```
-Background information and links to relevant terms
-```
-## Demo
-#### Install
-In order to install the components of our demo, follow the instructions provided in this file: [Installation & Administration Guide](installationguide.md)
-```
-Within the docs folder, the "installationguide.md" is to be filled with information on how to install the demo components
-and their dependencies.
+The challenges for the company originate mainly from two sources: the
+increased demand and unpredictability of their production. Different workers
+require different processing times depending on their skill and experience, and
+inconsistencies in production quality mean that sometimes a workpiece may
+even be returned for corrective re-processing to ensure that the quality of the
+finished product is not compromised.
 
-A convenient simulator or simulated/dummy datasets will be contributed when the source code, binaries, and/or functionality
-of a given component cannot be shared as part of the public demo due to privacy- or deployment-related issues.
-```
+### Main Objectives
 
-#### Usage
-Information about how to use the demo components can be found in the [User & Programmers Manual](usermanual.md).
-```
-Within the docs folder, the "installationguide.md" is to be filled with information on how to use and configure the
-components of the demo.
-```
+The proposed solution aims to achieve high flexibility requirements for automating the processing flat workpieces which account for
+more than 90% of the workload in sanding phase.
+Combined knowhow and experience of workers will be gathered and stored in a database of recipes, and it will contain information about correct
+set of sanding parameters for a certain type of material in relation to the desired finish The worker will be able to choose the correct
+recipe from the database and, based on that, the system will automatically configure all processing parameters.
+The required high flexibility will be achieved through set of intelligent capabilities which give the system the ability to self reconfigure
+and adapt to workpieces. The system will have the ability to measure shape and coordinates of the workpiece and ensure they will be
+properly held during processing.
+The quality inconsistencies and re processing issue will be completely solved through automation of the sanding process using robotized 
+solution with force feedback and automatic sanding disk exchanger.
 
-#### API
-Detailed descriptions of the demo component APIs are available in the [API documentation](api.md) 
-```
-Within the docs folder, the "api.md" is to be filled with the definition of component APIs.
+### Solution
 
-Special emphasis will be put on the description of NGSI APIs, providing tas many details as possible on the 
-the subscriptions, registrations, requests, and responses associated with each component of the demo. 
+The solution consists of the following components:
+- the ROSE-AP application, called TrackGen, which is a Flask application that processes point clouds (extracted in an intelligent way
+  by the vision system) and returns trajectories for the target application.
+- a tailored FIWARE connector that acts also as vision system, acquires images from an USB camera, generates point clouds from images
+  and handle communication with PLC and robot;
+- a local instance of FIWARE Orion Context Broker, which is ready and runs in the plant. 
+  The database MongoDB stores the NGSI entities that come from the context broker;
+- a local instance of FIWARE QuantumLeap as historical data connector to feed a CrateDB, a local data historian.
 
-Non-NGSI APIs will be fully described only if they define an interface to an NGSI-Compliant component.
+## Install
 
-Non-NGSI APIs in charge of enabling interfaces between components that are totally opaque from the NGSI
-point of view will be listed and/or shortly described if they are of relevance to understand, install or
-use the demo.
-```
+Information about how to install the ARP ROSE-AP can be found in the [Installation Guide](installationguide.md).
 
-#### Testing
+## Usage
 
-```
-This section will contribute step-by-step procedures to perform a basic end-to-end test of the setup 
-features described in the mid-term review demo. For each test, the definition of the step-by-tep procedure
-may consist of:
-- Description of the use case that the test aim to cover
-- Definition of the required inputs and steps to retrieve meaningful outputs
-- A convenient simulator or simulated/dummy datasets to validate the use case in cases where the source 
-code, binaries, and/or functionality of a given component cannot be shared as part of the public demo.
-```
-
-
+Information about how to use the component can be found in the [User Manual] (usermanual.md).
 
 ## License
 
-[MIT](LICENSE) © <TTE>
+[Apache2.0](LICENSE) © 2022 Vision Equipment 

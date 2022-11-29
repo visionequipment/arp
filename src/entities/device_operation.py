@@ -65,6 +65,9 @@ class DeviceOperation(Base):
             "end": {
                 "type": "Text",
                 "value": end},
+            "targetSpeed": {
+                "type": "Float",
+                "value": float(1)},
             "progress": {
                 "type": "Float",
                 "value": self.sanding_progress},

@@ -9,7 +9,7 @@ def send_request(url, jdata):
 
 if __name__ == "__main__":
 
-    subs = [{"description": "Notify TrackGen of a new Point Clouds", "subject": {
+    subs = [{"description": "Notify TrackGen of a new Point Cloud", "subject": {
                 "entities": [{"idPattern": ".*", "type": "PointCloud"}],
                 "condition": {"attrs": ["pointCloud"]}},
              "url": "http://trackgen:5050/notify/", "attrs": "pointCloud"},
