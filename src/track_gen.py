@@ -13,8 +13,8 @@ app = Flask(__name__)
 hostname = os.environ['ORION_HOST']
 port = os.environ["TRACKGEN_PORT"]
 
-robot_speed = 20
-sander_diameter = 125
+robot_speed = 2.0
+sander_diameter = 125.0
 overlap_percentage = 25
 overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
 MOVE_FROM_SIDE_TO_SIDE_CONST = 0.0001
@@ -269,46 +269,58 @@ def process_points(data):
                 v_1 = None
             continue
         if counter == 0:
-            if (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
-                (coeff[0] / coeff[1] == v_1[0][0] / v_1[0][1]):
-                if v_1[1] == 1 != length:
+            try:
+                if (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
+                    (coeff[0] / coeff[1] == v_1[0][0] / v_1[0][1]):
+                    if v_1[1] == 1 != length:
+                        counter = 0
+                        v_1 = None
+                        u_1 = None
+                        temp = None
+                        continue
+                    counter = 1
+                    temp = l
+                    if u_1[2][0][0] not in rem_pnts:
+                        rem_pnts.append(u_1[2][0])
+                    if u_1[2][0][1] not in rem_pnts:
+                        rem_pnts.append(u_1[2][1])
+                    if temp[2][0][0] not in rem_pnts:
+                        rem_pnts.append(temp[2][0])
+                else:
                     counter = 0
                     v_1 = None
                     u_1 = None
                     temp = None
-                    continue
-                counter = 1
-                temp = l
-                if u_1[2][0][0] not in rem_pnts:
-                    rem_pnts.append(u_1[2][0])
-                if u_1[2][0][1] not in rem_pnts:
-                    rem_pnts.append(u_1[2][1])
-                if temp[2][0][0] not in rem_pnts:
-                    rem_pnts.append(temp[2][0])
-            else:
+            except:
                 counter = 0
                 v_1 = None
                 u_1 = None
                 temp = None
         else:
-            if (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
-                (coeff[0] / coeff[1] == u_1[0][0] / u_1[0][1]):
-                if u_1[1] == 1 != length:
+            try:
+                if (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
+                    (coeff[0] / coeff[1] == u_1[0][0] / u_1[0][1]):
+                    if u_1[1] == 1 != length:
+                        counter = 0
+                        v_1 = None
+                        u_1 = None
+                        temp = None
+                        continue
                     counter = 0
+                    temp = l
+                    if temp[2][0][0] not in rem_pnts:
+                        rem_pnts.append(temp[2][0])
+                else:
+                    counter = 1
                     v_1 = None
                     u_1 = None
                     temp = None
-                    continue
-                counter = 0
-                temp = l
-                if temp[2][0][0] not in rem_pnts:
-                    rem_pnts.append(temp[2][0])
-            else:
+            except:
                 counter = 1
                 v_1 = None
                 u_1 = None
                 temp = None
-
+    
     # To merge lines, remove other "intermediate" points
     final_pts = []
     for p in fin_pts:
@@ -332,12 +344,15 @@ def process_points(data):
 def return_trajectory(pointcloud):
     logger.info(f"Data received: {pointcloud}")
     trajectory, total_est_time = process_points(pointcloud["data"][0]["pointCloud"]["value"])
-    data = meas.get(trajectory, pointcloud["data"][0]["id"], total_est_time)
-    logger.info(f"Resulting trajectory: {data}")
-    re = requests.post("http://" + hostname + ":1026/v2/entities/", data=json.dumps(data),
-                       headers={"content-type": "application/json"})
-    logger.info(re.content.decode('UTF-8'))
-    return trajectory
+    res = meas.get(trajectory, pointcloud["data"][0]["id"], total_est_time)
+    logger.info(f"Resulting trajectory: {res}")
+    try:
+        re = requests.post("http://" + hostname + ":1026/v2/entities/", data=json.dumps(res),
+                           headers={"content-type": "application/json"})
+        logger.info(re.content.decode('UTF-8'))
+    except:
+        logger.error("Unable to contact ORION")
+    return res
 
 
 @app.route("/notify/", methods=['POST'])

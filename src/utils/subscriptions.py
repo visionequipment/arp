@@ -19,10 +19,10 @@ if __name__ == "__main__":
                 "condition": {"attrs": ["outputTrajectory"]}},
              "url": "http://host.docker.internal:5500/notify/", "attrs": "outputTrajectory"},
 
-            {"description": "Notify TrackGen of new robot speed", "subject": {
-                "entities": [{"idPattern": ".*ROBOT.*", "type": "Device"}],
-                "condition": {"attrs": ["extraParameters"]}},
-             "url": "http://trackgen:5050/speed/", "attrs": "extraParameters"}]
+            {"description": "Notify TrackGen of new robot speed value", "subject": {
+                "entities": [{"idPattern": ".*", "type": "DeviceOperation"}],
+                "condition": {"attrs": ["targetSpeed"]}},
+             "url": "http://trackgen:5050/speed/", "attrs": "targetSpeed"}]
 
     for s in subs:
         sub = {

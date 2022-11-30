@@ -7,18 +7,16 @@ all benefits of using the FIWARE Orion Context Broker. Here you have all HTTP AP
 
 Except for the "ping" API, all APIs provided are HTTP POST methods.
 
-- ```ping``` to check whether application is running
+- ```GET ping``` to check whether application is running
 
 	```sh
-    # GET ping/
 	curl http://localhost:5050/ping/
 	```
 
-- ```notify``` to send point clouds and receive trajectories
+- ```POST notify``` to send point clouds and receive trajectories
 
     ```sh
-    # POST notify/
-	curl -i -X POST -H "Content-Type: application/json" -d '{"data": [{"pointCloud": { \
+	curl -i -X POST -H "Content-Type: application/json" -d '{"data": [{"id" : "Example", "pointCloud": { \
                 "type": "StructuredValue", "value": [ \
                     {"y": 0, "x": 0, "z": 0},		\
                     {"y": 20, "x": 0, "z": 0},		\
@@ -48,24 +46,21 @@ Except for the "ping" API, all APIs provided are HTTP POST methods.
                 ]}}]}' http://localhost:5050/notify/
 	```
 	
-- ```speed``` to update robot speed (it is useful to estimate the time to complete the trajectory
+- ```POST speed``` to update robot speed (it is useful to estimate the time to complete the trajectory
 
 	```sh
-    # POST speed/
 	curl -i -X POST -H "Content-Type: application/json" -d '{"data": [{"targetSpeed": { "type": "Float", "value": 1.0 }}]}'  http://localhost:5050/speed/
 	```
 
-- ```overlap``` to update overlap percentage (it is a parameter related to the final required quality)
+- ```POST overlap``` to update overlap percentage (it is a parameter related to the final required quality)
 
 	```sh
-    # POST overlap/
 	curl -i -X POST -H "Content-Type: application/json" -d '{"data": [{"requiredQuality": { "type": "Text", "value": "High" }}]}'  http://localhost:5050/overlap/
 	```
 
-- ```diameter``` to update robot speed (it is useful to estimate the time to complete the trajectory
+- ```POST diameter``` to update robot speed (it is useful to estimate the time to complete the trajectory
 
 	```sh
-    # POST diameter/
 	curl -i -X POST -H "Content-Type: application/json" -d '{"data": [{"diameter": { "type": "Float", "value": 125.0 }}]}'  http://localhost:5050/diameter/
 	```
 
