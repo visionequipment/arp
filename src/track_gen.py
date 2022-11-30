@@ -347,7 +347,7 @@ def notify():
 
 
 @app.route("/speed/", methods=['POST'])
-def area():
+def speed():
     global robot_speed
     data = request.get_json()
     robot_speed = float(data["data"][0]['targetSpeed']["value"])
@@ -356,7 +356,7 @@ def area():
 
 
 @app.route("/overlap/", methods=['POST'])
-def area():
+def overlap():
     global overlap_percentage
     global overlap_dist
     data = request.get_json()
@@ -378,7 +378,7 @@ def area():
 
 
 @app.route("/diameter/", methods=['POST'])
-def area():
+def diameter():
     global sander_diameter
     global overlap_dist
     data = request.get_json()

@@ -59,7 +59,7 @@ Information about how to install the ARP ROSE-AP can be found in the [Installati
 
 ## Usage
 
-Information about how to use the component can be found in the [User Manual] (docs/usermanual.md).
+Information about how to use the component can be found in the [User Manual](docs/usermanual.md).
 
 ## License
 

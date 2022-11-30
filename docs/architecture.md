@@ -1,6 +1,6 @@
 # Architecture
 
-The solution consists of the following components:
+The solution consists of the following (hardware and software) components:
 - the ROSE-AP application, called TrackGen, which is a Flask application that processes point clouds (extracted in an intelligent way
   by the vision system) and returns trajectories for the target application.
 - a tailored FIWARE connector that acts also as vision system, acquires images from an USB camera, generates point clouds from images
@@ -11,3 +11,5 @@ The solution consists of the following components:
 - a PLC that commands a conveyor belt.
 - a robot that executes the sanding.
 
+In this repository, you can find the ROSE-AP code, the Docker Compose YAML file to reproduce the FIWARE environment
+ and a simulated vision system, to test the component. PLC and robot software is not provided.

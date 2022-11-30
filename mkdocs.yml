@@ -11,6 +11,7 @@ pages:
   - Home: 'README.md'
   - 'User & Programmers Manual':
     - 'Architecture' : 'architecture.md'
+    - 'API' : 'api.md'
     - 'User Guide': 'usermanual.md'
   - 'Installation & Administration Manual': 
     - 'Installation Guide': 'installationguide.md'
