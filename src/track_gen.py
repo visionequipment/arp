@@ -13,7 +13,7 @@ app = Flask(__name__)
 hostname = os.environ['ORION_HOST']
 port = os.environ["TRACKGEN_PORT"]
 
-robot_speed = 2.0
+robot_speed = 5.0
 sander_diameter = 125.0
 overlap_percentage = 25
 overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
@@ -21,13 +21,13 @@ MOVE_FROM_SIDE_TO_SIDE_CONST = 0.0001
 
 
 def compute_time(pa, pb):
-    return np.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2) / robot_speed
+    return np.sqrt((pa[0] - pb[0]) ** 2 + (pa[1] - pb[1]) ** 2 + (pa[2] - pb[2]) ** 2) / robot_speed
 
 
 def line_from_points(P, Q):
     a = Q[1] - P[1]
     b = P[0] - Q[0]
-    c = a*(P[0]) + b*(P[1])
+    c = a * (P[0]) + b * (P[1])
     if c != 0:
         a /= c
         b /= c
@@ -68,61 +68,57 @@ def process_points(data):
     min_y = None
     max_x = None
     max_y = None
-    unique_row_indeces = []
-    unique_column_indeces = []
 
-    # Iterate over all points and select only those with z other than 0
-    for p in data:
-        if p["z"] != 0:
-            if p["y"] in rows:
-                rows[p["y"]].append(p["x"])
-                pts[(p["y"], p["x"])] = p["z"]
-            else:
-                rows[p["y"]] = [p["x"]]
-                pts[(p["y"], p["x"])] = p["z"]
-        if min_x is None or p["y"] < min_x:
-            min_x = p["y"]
-        if min_y is None or p["x"] < min_y:
-            min_y = p["x"]
-        if max_x is None or p["y"] > max_x:
-            max_x = p["y"]
-        if max_y is None or p["x"] > max_y:
-            max_y = p["x"]
-        if p["y"] not in unique_row_indeces:
-            unique_row_indeces.append(p["y"])
-        if p["x"] not in unique_column_indeces:
-            unique_column_indeces.append(p["x"])
+    if len(data) == 0:
+        return None
+    if len(data[0]) == 0:
+        return None
 
-    # Estimate number of rows to skip 
-    point_dist = np.abs(data[1]["x"] - data[0]["x"]) if np.abs(data[1]["x"] - data[0]["x"]) != 0 else np.abs(data[1]["y"] - data[0]["y"])
-    n_skipped_lines = int(overlap_dist / point_dist)
-
-    # Create point cloud
-    matrix = np.zeros((len(unique_row_indeces), len(unique_column_indeces)))
-    unique_row_indeces = np.array(sorted(unique_row_indeces))
-    unique_column_indeces = np.array(sorted(unique_column_indeces))
+    n_rows = len(data)
+    n_columns = len(data[0])
+    matrix = np.zeros((n_rows, n_columns))
     point_map = {}
     rev_map = {}
-    for p in data:
-        y = np.where(unique_row_indeces == p["y"])[0][0]
-        x = np.where(unique_column_indeces == p["x"])[0][0]
-        point_map[p["y"], p["x"]] = y, x
-        rev_map[y, x] = [p["y"], p["x"], p["z"]]
-        matrix[point_map[p["y"], p["x"]]] = p["z"]
+    rev_int_map = {}
+    # Iterate over all points and select only those with z other than 0 and create point cloud
+    for i, row in enumerate(data):
+        for j, p in enumerate(row):
+            point_map[p["y"], p["x"]] = i, j
+            rev_map[i, j] = [p["y"], p["x"], p["z"]]
+            matrix[point_map[p["y"], p["x"]]] = p["z"]
+            if p["z"] > -100:
+                if i in rows:
+                    rows[i].append(j)
+                else:
+                    rows[i] = [j]
+                pts[(i, j)] = p["z"]
+            if min_x is None or i < min_x:
+                min_x = i
+            if min_y is None or j < min_y:
+                min_y = j
+            if max_x is None or i > max_x:
+                max_x = i
+            if max_y is None or j > max_y:
+                max_y = j
+
+    # Estimate number of rows to skip 
+    point_dist = np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) if np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) != 0 else \
+        np.abs(rev_map[0, 0][1] - rev_map[0, 1][1])
+    n_skipped_lines = int(overlap_dist / point_dist)
 
     # Iterate over not-empty rows and select only significant points for surface
     is_reverse = False
     points = []
     for i, r in enumerate(rows):
         if len(rows[r]) == 1:
-            points.append([r, rows[r][0], pts[r, rows[r][0]]])
+            points.append(rev_map[r, rows[r][0]])
         else:
             if i % n_skipped_lines == 0:
                 cur_row = sorted(rows[r]) if not is_reverse else list(reversed(sorted(rows[r])))
                 # Add first point of the row to trajectory
-                points.append([r, cur_row[0], pts[r, cur_row[0]]])
+                points.append(rev_map[r, cur_row[0]])
                 # Add last point of the row to trajectory
-                points.append([r, cur_row[-1], pts[r, cur_row[-1]]])
+                points.append(rev_map[r, cur_row[-1]])
                 is_reverse = not is_reverse
 
     # Iterate over points to generate first part of the trajectory (surface)
@@ -140,14 +136,14 @@ def process_points(data):
 
     # Iterate over matrix to select only border points
     min_x_ind = 0
-    max_x_ind = len(unique_row_indeces) - 1
+    max_x_ind = n_rows - 1
     min_y_ind = 0
-    max_y_ind = len(unique_column_indeces) - 1
+    max_y_ind = n_columns - 1
     _pts = []
     inter_pts = []
     for i in range(matrix.shape[0]):
         for j in range(matrix.shape[1]):
-            if matrix[i][j] != 0:
+            if matrix[i][j] > -100:
                 # Check whether point is on the working area borders
                 if i == min_x_ind or i == max_x_ind or j == min_y_ind or j == max_y_ind:
                     if i == min_x_ind:
@@ -183,13 +179,13 @@ def process_points(data):
                         if (i != min_x_ind and i != max_x_ind) and matrix[i + 1][j] == 0:
                             _pts.append((rev_map[i, j], "bottom"))
                 else:
-                    if matrix[i-1][j] == 0:
+                    if matrix[i - 1][j] == -100:
                         _pts.append((rev_map[i, j], "top"))
-                    if matrix[i][j-1] == 0:
+                    if matrix[i][j - 1] == -100:
                         _pts.append((rev_map[i, j], "left"))
-                    if matrix[i][j+1] == 0:
+                    if matrix[i][j + 1] == -100:
                         _pts.append((rev_map[i, j], "right"))
-                    if matrix[i+1][j] == 0:
+                    if matrix[i + 1][j] == -100:
                         _pts.append((rev_map[i, j], "bottom"))
 
     # Initialize border trajectory with first point
@@ -219,7 +215,7 @@ def process_points(data):
     fin_pts = []
     lines = []
     num = 0
-    inter_pts.append(inter_pts[0]) # Same starting and ending points
+    inter_pts.append(inter_pts[0])  # Same starting and ending points
     for i, px in enumerate(inter_pts):
         p = px[0]
         if lpoint is None:
@@ -237,11 +233,11 @@ def process_points(data):
             if cur_line == line:
                 num += 1
             else:
-                lines.append([line, num, (spoint, inter_pts[i-1])])
+                lines.append([line, num, (spoint, inter_pts[i - 1])])
                 num = 1
                 line = cur_line
-                spoint = inter_pts[i-1]
-                fin_pts.append(inter_pts[i-1])
+                spoint = inter_pts[i - 1]
+                fin_pts.append(inter_pts[i - 1])
         lpoint = p
     lines.append([line, num, (spoint, p)])
     fin_pts.append(inter_pts[i])
@@ -263,64 +259,52 @@ def process_points(data):
             continue
         if u_1 is None:
             if ((coeff[0] == 0 and v_1[0][1] != 0) or (coeff[1] == 0 and v_1[0][0] != 0) or \
-               (v_1[0][0] * coeff[0] > 0 and v_1[0][1] * coeff[1] > 0)) and (length == 1 or v_1[1] == 1):
+                (v_1[0][0] * coeff[0] > 0 and v_1[0][1] * coeff[1] > 0)) and (length == 1 or v_1[1] == 1):
                 u_1 = l
             else:
                 v_1 = None
             continue
         if counter == 0:
-            try:
-                if (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
+            if (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
                     (coeff[0] / coeff[1] == v_1[0][0] / v_1[0][1]):
-                    if v_1[1] == 1 != length:
-                        counter = 0
-                        v_1 = None
-                        u_1 = None
-                        temp = None
-                        continue
-                    counter = 1
-                    temp = l
-                    if u_1[2][0][0] not in rem_pnts:
-                        rem_pnts.append(u_1[2][0])
-                    if u_1[2][0][1] not in rem_pnts:
-                        rem_pnts.append(u_1[2][1])
-                    if temp[2][0][0] not in rem_pnts:
-                        rem_pnts.append(temp[2][0])
-                else:
+                if v_1[1] == 1 != length:
                     counter = 0
                     v_1 = None
                     u_1 = None
                     temp = None
-            except:
+                    continue
+                counter = 1
+                temp = l
+                if u_1[2][0][0] not in rem_pnts:
+                    rem_pnts.append(u_1[2][0])
+                if u_1[2][0][1] not in rem_pnts:
+                    rem_pnts.append(u_1[2][1])
+                if temp[2][0][0] not in rem_pnts:
+                    rem_pnts.append(temp[2][0])
+            else:
                 counter = 0
                 v_1 = None
                 u_1 = None
                 temp = None
         else:
-            try:
-                if (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
+            if (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
                     (coeff[0] / coeff[1] == u_1[0][0] / u_1[0][1]):
-                    if u_1[1] == 1 != length:
-                        counter = 0
-                        v_1 = None
-                        u_1 = None
-                        temp = None
-                        continue
+                if u_1[1] == 1 != length:
                     counter = 0
-                    temp = l
-                    if temp[2][0][0] not in rem_pnts:
-                        rem_pnts.append(temp[2][0])
-                else:
-                    counter = 1
                     v_1 = None
                     u_1 = None
                     temp = None
-            except:
+                    continue
+                counter = 0
+                temp = l
+                if temp[2][0][0] not in rem_pnts:
+                    rem_pnts.append(temp[2][0])
+            else:
                 counter = 1
                 v_1 = None
                 u_1 = None
                 temp = None
-    
+
     # To merge lines, remove other "intermediate" points
     final_pts = []
     for p in fin_pts:
