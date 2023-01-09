@@ -63,4 +63,4 @@ Information about how to use the component can be found in the [User Manual](use
 
 ## License
 
-[Apache2.0](LICENSE) © 2022 Vision Equipment 
+[Apache2.0](LICENSE) © 2023 Vision Equipment 

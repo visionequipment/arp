@@ -3,8 +3,7 @@ import json
 import requests
 import numpy as np
 from loguru import logger
-from flask import Flask, request
-from concurrent.futures import ThreadPoolExecutor
+from flask import Flask, request, abort
 
 from entities import Measurement
 
@@ -13,21 +12,26 @@ app = Flask(__name__)
 hostname = os.environ['ORION_HOST']
 port = os.environ["TRACKGEN_PORT"]
 
-robot_speed = 5.0
-sander_diameter = 125.0
+robot_speed = 5000.0 / 60.0
+sander_diameter = 125
 overlap_percentage = 25
 overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+overlap_offset = sander_diameter * 25 / 100
 MOVE_FROM_SIDE_TO_SIDE_CONST = 0.0001
 
 
 def compute_time(pa, pb):
-    return np.sqrt((pa[0] - pb[0]) ** 2 + (pa[1] - pb[1]) ** 2 + (pa[2] - pb[2]) ** 2) / robot_speed
+    return np.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2 + (pa[2]-pb[2])**2) / robot_speed
+
+
+def compute_time_2d(pa, pb):
+    return np.sqrt((pa[0] - pb[0]) ** 2 + (pa[1] - pb[1]) ** 2)
 
 
 def line_from_points(P, Q):
     a = Q[1] - P[1]
     b = P[0] - Q[0]
-    c = a * (P[0]) + b * (P[1])
+    c = a*(P[0]) + b*(P[1])
     if c != 0:
         a /= c
         b /= c
@@ -70,16 +74,16 @@ def process_points(data):
     max_y = None
 
     if len(data) == 0:
-        return None
+        return None, 0
     if len(data[0]) == 0:
-        return None
+        return None, 0
+    
 
     n_rows = len(data)
     n_columns = len(data[0])
     matrix = np.zeros((n_rows, n_columns))
     point_map = {}
     rev_map = {}
-    rev_int_map = {}
     # Iterate over all points and select only those with z other than 0 and create point cloud
     for i, row in enumerate(data):
         for j, p in enumerate(row):
@@ -105,15 +109,20 @@ def process_points(data):
     point_dist = np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) if np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) != 0 else \
         np.abs(rev_map[0, 0][1] - rev_map[0, 1][1])
     n_skipped_lines = int(overlap_dist / point_dist)
+    row_offset = int(overlap_offset / point_dist)
 
     # Iterate over not-empty rows and select only significant points for surface
     is_reverse = False
     points = []
+    fp = None
     for i, r in enumerate(rows):
         if len(rows[r]) == 1:
-            points.append(rev_map[r, rows[r][0]])
+            points.append((r, rows[r][0]))
         else:
             if i % n_skipped_lines == 0:
+                if fp == None:
+                    fp = (r, rows[r][0])
+            if i % n_skipped_lines == row_offset:
                 cur_row = sorted(rows[r]) if not is_reverse else list(reversed(sorted(rows[r])))
                 # Add first point of the row to trajectory
                 points.append(rev_map[r, cur_row[0]])
@@ -125,11 +134,8 @@ def process_points(data):
     traj = []
     total_time = 0
     lp = None
-    fp = None
     for p in points:
         step_time = 0 if lp is None else compute_time(p, lp)
-        if fp == None:
-            fp = p
         traj.append({"x": p[1], "y": p[0], "z": p[2], "time": step_time, "side": "surface"})
         total_time += step_time
         lp = p
@@ -147,46 +153,46 @@ def process_points(data):
                 # Check whether point is on the working area borders
                 if i == min_x_ind or i == max_x_ind or j == min_y_ind or j == max_y_ind:
                     if i == min_x_ind:
-                        _pts.append((rev_map[i, j], "top"))
-                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j - 1] == 0:
-                            _pts.append((rev_map[i, j], "left"))
-                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j + 1] == 0:
-                            _pts.append((rev_map[i, j], "right"))
-                        if i != max_y_ind and matrix[i + 1][j] == 0:
-                            _pts.append((rev_map[i, j], "bottom"))
+                        _pts.append(((i, j), "top"))
+                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j - 1] == -100:
+                            _pts.append(((i, j), "left"))
+                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j + 1] == -100:
+                            _pts.append(((i, j), "right"))
+                        if i != max_y_ind and matrix[i + 1][j] == -100:
+                            _pts.append(((i, j), "bottom"))
                     if i == max_x_ind:
-                        _pts.append((rev_map[i, j], "bottom"))
-                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j - 1] == 0:
-                            _pts.append((rev_map[i, j], "left"))
-                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j + 1] == 0:
-                            _pts.append((rev_map[i, j], "right"))
-                        if i != min_x_ind and matrix[i - 1][j] == 0:
-                            _pts.append((rev_map[i, j], "top"))
+                        _pts.append(((i, j), "bottom"))
+                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j - 1] == -100:
+                            _pts.append(((i, j), "left"))
+                        if (j != min_y_ind and j != max_y_ind) and matrix[i][j + 1] == -100:
+                            _pts.append(((i, j), "right"))
+                        if i != min_x_ind and matrix[i - 1][j] == -100:
+                            _pts.append(((i, j), "top"))
                     if j == min_y_ind:
-                        _pts.append((rev_map[i, j], "left"))
-                        if (i != min_x_ind and i != max_x_ind) and matrix[i - 1][j] == 0:
-                            _pts.append((rev_map[i, j], "top"))
-                        if j != max_y_ind and matrix[i][j + 1] == 0:
-                            _pts.append((rev_map[i, j], "right"))
-                        if (i != min_x_ind and i != max_x_ind) and matrix[i + 1][j] == 0:
-                            _pts.append((rev_map[i, j], "bottom"))
+                        _pts.append(((i, j), "left"))
+                        if (i != min_x_ind and i != max_x_ind) and matrix[i - 1][j] == -100:
+                            _pts.append(((i, j), "top"))
+                        if j != max_y_ind and matrix[i][j + 1] == -100:
+                            _pts.append(((i, j), "right"))
+                        if (i != min_x_ind and i != max_x_ind) and matrix[i + 1][j] == -100:
+                            _pts.append(((i, j), "bottom"))
                     if j == max_y_ind:
-                        _pts.append((rev_map[i, j], "right"))
-                        if (i != min_x_ind and i != max_x_ind) and matrix[i - 1][j] == 0:
-                            _pts.append((rev_map[i, j], "top"))
-                        if j != min_y_ind and matrix[i][j - 1] == 0:
-                            _pts.append((rev_map[i, j], "left"))
-                        if (i != min_x_ind and i != max_x_ind) and matrix[i + 1][j] == 0:
-                            _pts.append((rev_map[i, j], "bottom"))
+                        _pts.append(((i, j), "right"))
+                        if (i != min_x_ind and i != max_x_ind) and matrix[i - 1][j] == -100:
+                            _pts.append(((i, j), "top"))
+                        if j != min_y_ind and matrix[i][j - 1] == -100:
+                            _pts.append(((i, j), "left"))
+                        if (i != min_x_ind and i != max_x_ind) and matrix[i + 1][j] == -100:
+                            _pts.append(((i, j), "bottom"))
                 else:
                     if matrix[i - 1][j] == -100:
-                        _pts.append((rev_map[i, j], "top"))
+                        _pts.append(((i, j), "top"))
                     if matrix[i][j - 1] == -100:
-                        _pts.append((rev_map[i, j], "left"))
+                        _pts.append(((i, j), "left"))
                     if matrix[i][j + 1] == -100:
-                        _pts.append((rev_map[i, j], "right"))
+                        _pts.append(((i, j), "right"))
                     if matrix[i + 1][j] == -100:
-                        _pts.append((rev_map[i, j], "bottom"))
+                        _pts.append(((i, j), "bottom"))
 
     # Initialize border trajectory with first point
     start_stop = None
@@ -202,7 +208,7 @@ def process_points(data):
     while len(_pts) > 0:
         best_match = None
         for i, p in enumerate(_pts):
-            t = compute_time(inter_pts[-1][0], p[0])
+            t = compute_time_2d(inter_pts[-1][0], p[0])
             if best_match is None or (is_contigous(inter_pts[-1], p) and t <= best_match[1]):
                 best_match = i, t
         element = _pts.pop(best_match[0])
@@ -258,7 +264,7 @@ def process_points(data):
             v_1 = l
             continue
         if u_1 is None:
-            if ((coeff[0] == 0 and v_1[0][1] != 0) or (coeff[1] == 0 and v_1[0][0] != 0) or \
+            if ((coeff[0] == 0 and v_1[0][1] != 0) or (coeff[1] == 0 and v_1[0][0] != 0) or
                 (v_1[0][0] * coeff[0] > 0 and v_1[0][1] * coeff[1] > 0)) and (length == 1 or v_1[1] == 1):
                 u_1 = l
             else:
@@ -313,9 +319,11 @@ def process_points(data):
 
     # Iterate over points to compute times of the second part of the trajectory (borders)
     for i, px in enumerate(final_pts):
-        p = px[0]
+        p = rev_map[px[0]]
         step_time = 0 if lp is None else compute_time(p, lp)
         # If current and last point are external, then send command to move from one side to the other
+        if len(traj) > 0 and (traj[-1]["side"] == "surface" and px[1] != "surface"):
+            step_time = 0
         if p != lp and \
                 (p[0] == lp[0] == min_x or p[1] == lp[1] == min_y or p[0] == lp[0] == max_x or p[1] == lp[1] == max_y):
             step_time = MOVE_FROM_SIDE_TO_SIDE_CONST
@@ -328,15 +336,12 @@ def process_points(data):
 def return_trajectory(pointcloud):
     logger.info(f"Data received: {pointcloud}")
     trajectory, total_est_time = process_points(pointcloud["data"][0]["pointCloud"]["value"])
-    res = meas.get(trajectory, pointcloud["data"][0]["id"], total_est_time)
-    logger.info(f"Resulting trajectory: {res}")
-    try:
-        re = requests.post("http://" + hostname + ":1026/v2/entities/", data=json.dumps(res),
-                           headers={"content-type": "application/json"})
-        logger.info(re.content.decode('UTF-8'))
-    except:
-        logger.error("Unable to contact ORION")
-    return res
+    data = meas.get(trajectory, pointcloud["data"][0]["id"], total_est_time)
+    logger.info(f"Resulting trajectory: {data}")
+    re = requests.post("http://" + hostname + ":1026/v2/entities/", data=json.dumps(data),
+                       headers={"content-type": "application/json"})
+    logger.info(re.content.decode('UTF-8'))
+    return trajectory
 
 
 @app.route("/notify/", methods=['POST'])
@@ -348,43 +353,56 @@ def notify():
 @app.route("/speed/", methods=['POST'])
 def speed():
     global robot_speed
-    data = request.get_json()
-    robot_speed = float(data["data"][0]['targetSpeed']["value"])
-    logger.info(f"New speed: {robot_speed}")
-    return "OK"
+    try:
+        data = request.get_json()
+        value = float(data["data"][0]['targetSpeed']["value"])
+        # Check whether speed is in mm / s (too low values mean m / min)
+        robot_speed = value * 1000 / 60.0 if value < 50 else value 
+        logger.info(f"New speed: {robot_speed}")
+        return "OK"
+    except:
+        return abort()
 
 
 @app.route("/overlap/", methods=['POST'])
 def overlap():
     global overlap_percentage
     global overlap_dist
-    data = request.get_json()
-    requiredQuality = data["data"][0]['requiredQuality']["value"]
-    if requiredQuality == "Low":
-        overlap_percentage = 25
-        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
-    if requiredQuality == "Medium":
-        overlap_percentage = 37
-        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
-    elif requiredQuality == "High":
-        overlap_percentage = 50
-        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
-    else:
-        overlap_percentage = 25
-        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
-    logger.info(f"New overlap percentage: {overlap_percentage}")
-    return "OK"
+    try:
+        data = request.get_json()
+        requiredQuality = data["data"][0]['requiredQuality']["value"]
+        if requiredQuality == "Low":
+            overlap_percentage = 25
+            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        if requiredQuality == "Medium":
+            overlap_percentage = 37
+            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        elif requiredQuality == "High":
+            overlap_percentage = 50
+            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        else:
+            overlap_percentage = 25
+            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        logger.info(f"New overlap percentage: {overlap_percentage}")
+        return "OK"
+    except:
+        return abort()
 
 
 @app.route("/diameter/", methods=['POST'])
 def diameter():
     global sander_diameter
     global overlap_dist
-    data = request.get_json()
-    sander_diameter = float(data["data"][0]['diameter']["value"])
-    overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
-    logger.info(f"New sander diameter: {sander_diameter}")
-    return "OK"
+    global overlap_offset
+    try:
+        data = request.get_json()
+        sander_diameter = float(data["data"][0]['diameter']["value"])
+        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        overlap_offset = sander_diameter * 25 / 100
+        logger.info(f"New sander diameter: {sander_diameter}")
+        return "OK"
+    except:
+        return abort()
 
 
 @app.route("/ping/", methods=['GET'])
