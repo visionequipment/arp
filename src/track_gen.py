@@ -106,8 +106,7 @@ def process_points(data):
                 max_y = j
 
     # Estimate number of rows to skip 
-    point_dist = np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) if np.abs(rev_map[0, 0][0] - rev_map[1, 0][0]) != 0 else \
-        np.abs(rev_map[0, 0][1] - rev_map[0, 1][1])
+    point_dist = np.mean([np.abs(rev_map[i, 0][1] - rev_map[i-1, 0][1]) for i in range(1, n_rows)])
     n_skipped_lines = int(overlap_dist / point_dist)
     row_offset = int(overlap_offset / point_dist)
 
@@ -117,7 +116,7 @@ def process_points(data):
     fp = None
     for i, r in enumerate(rows):
         if len(rows[r]) == 1:
-            points.append((r, rows[r][0]))
+            points.append(rev_map[r, rows[r][0]])
         else:
             if i % n_skipped_lines == 0:
                 if fp == None:
@@ -271,7 +270,12 @@ def process_points(data):
                 v_1 = None
             continue
         if counter == 0:
-            if (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
+            if (v_1[0][1] == 0 and coeff[1] != 0) or (v_1[0][1] == 0 and coeff[1] != 0):
+                counter = 0
+                v_1 = None
+                u_1 = None
+                temp = None
+            elif (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
                     (coeff[0] / coeff[1] == v_1[0][0] / v_1[0][1]):
                 if v_1[1] == 1 != length:
                     counter = 0
@@ -293,7 +297,12 @@ def process_points(data):
                 u_1 = None
                 temp = None
         else:
-            if (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
+            if (coeff[1] == 0 and u_1[0][1] != 0) or (coeff[1] != 0 and u_1[0][1] == 0):
+                counter = 1
+                v_1 = None
+                u_1 = None
+                temp = None                
+            elif (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
                     (coeff[0] / coeff[1] == u_1[0][0] / u_1[0][1]):
                 if u_1[1] == 1 != length:
                     counter = 0
