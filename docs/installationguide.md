@@ -17,7 +17,7 @@ docker build -f ..\docker\Dockerfile . -t trackgen
 
 ## Other RAMP IoT platform components
 
-- Configure parameters in ```docker-compose.yml``` file (docker folder) and run it to download images and create container:
+Configure parameters in ```docker-compose.yml``` file (docker folder) and run it to download images and create container:
 ```sh
 cd docker
 docker-compose up -d

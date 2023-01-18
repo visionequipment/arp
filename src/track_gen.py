@@ -15,7 +15,8 @@ port = os.environ["TRACKGEN_PORT"]
 robot_speed = 5000.0 / 60.0
 sander_diameter = 125
 overlap_percentage = 25
-overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+min_overlap_dist = sander_diameter * (100 - (overlap_percentage-5)) / 100
+max_overlap_dist = sander_diameter * (100 - (overlap_percentage+5)) / 100
 overlap_offset = sander_diameter * 25 / 100
 MOVE_FROM_SIDE_TO_SIDE_CONST = 0.0001
 
@@ -77,7 +78,6 @@ def process_points(data):
         return None, 0
     if len(data[0]) == 0:
         return None, 0
-    
 
     n_rows = len(data)
     n_columns = len(data[0])
@@ -107,8 +107,15 @@ def process_points(data):
 
     # Estimate number of rows to skip 
     point_dist = np.mean([np.abs(rev_map[i, 0][1] - rev_map[i-1, 0][1]) for i in range(1, n_rows)])
-    n_skipped_lines = int(overlap_dist / point_dist)
     row_offset = int(overlap_offset / point_dist)
+
+    n_skipped_lines = 0
+    out_lines = 10000
+    max_val = max(int(max_overlap_dist / point_dist) + 1, int(min_overlap_dist / point_dist) + 1)
+    for v in range(int(min_overlap_dist / point_dist), max_val):
+        if (len(rows) - row_offset) % v < out_lines:
+            out_lines = (len(rows) - row_offset) % v
+            n_skipped_lines = v
 
     # Iterate over not-empty rows and select only significant points for surface
     is_reverse = False
@@ -238,87 +245,42 @@ def process_points(data):
             if cur_line == line:
                 num += 1
             else:
-                lines.append([line, num, (spoint, inter_pts[i - 1])])
+                if num == 1 and compute_time_2d(spoint[0], inter_pts[i - 1][0]) < 2:
+                    pass
+                else:
+                    lines.append([line, num, (spoint, inter_pts[i - 1])])
                 num = 1
                 line = cur_line
                 spoint = inter_pts[i - 1]
                 fin_pts.append(inter_pts[i - 1])
         lpoint = p
-    lines.append([line, num, (spoint, p)])
+    lines.append([line, num, (spoint, px)])
     fin_pts.append(inter_pts[i])
 
     # Check if it is clockwise or not
-    if fin_pts[1][0][1] > fin_pts[0][0][1]:
+    if fin_pts[1][0][0] <= fin_pts[0][0][0] and fin_pts[1][0][1] > fin_pts[0][0][1]:
         fin_pts = list(reversed(fin_pts))
+    elif fin_pts[1][0][0] >= fin_pts[0][0][0] and (fin_pts[-1][0][1] < fin_pts[1][0][1] and fin_pts[1][0][1] > fin_pts[0][0][1]):
+        fin_pts = list(reversed(fin_pts))
+    else:
+        pass
 
     # Merge lines
-    v_1 = None
-    u_1 = None
+    last_line = None
     counter = 0
     rem_pnts = []
-    temp = None
-    for l in lines:
+    for i, l in enumerate(lines):
+        if last_line is None:
+            last_line = l
+            continue
         coeff, length, points = l
-        if v_1 is None:
-            v_1 = l
-            continue
-        if u_1 is None:
-            if ((coeff[0] == 0 and v_1[0][1] != 0) or (coeff[1] == 0 and v_1[0][0] != 0) or
-                (v_1[0][0] * coeff[0] > 0 and v_1[0][1] * coeff[1] > 0)) and (length == 1 or v_1[1] == 1):
-                u_1 = l
-            else:
-                v_1 = None
-            continue
-        if counter == 0:
-            if (v_1[0][1] == 0 and coeff[1] != 0) or (v_1[0][1] == 0 and coeff[1] != 0):
-                counter = 0
-                v_1 = None
-                u_1 = None
-                temp = None
-            elif (coeff[0] == 0 and v_1[0][0] == 0) or (coeff[1] == 0 and v_1[0][1] == 0) or \
-                    (coeff[0] / coeff[1] == v_1[0][0] / v_1[0][1]):
-                if v_1[1] == 1 != length:
-                    counter = 0
-                    v_1 = None
-                    u_1 = None
-                    temp = None
-                    continue
-                counter = 1
-                temp = l
-                if u_1[2][0][0] not in rem_pnts:
-                    rem_pnts.append(u_1[2][0])
-                if u_1[2][0][1] not in rem_pnts:
-                    rem_pnts.append(u_1[2][1])
-                if temp[2][0][0] not in rem_pnts:
-                    rem_pnts.append(temp[2][0])
-            else:
-                counter = 0
-                v_1 = None
-                u_1 = None
-                temp = None
+        if last_line[2][1][1] == points[0][1] == points[1][1]:
+            rem_pnts.extend([last_line[2][1], points[0]])
+        elif last_line[2][1] != points[0]:
+            rem_pnts.append(last_line[2][1])
         else:
-            if (coeff[1] == 0 and u_1[0][1] != 0) or (coeff[1] != 0 and u_1[0][1] == 0):
-                counter = 1
-                v_1 = None
-                u_1 = None
-                temp = None                
-            elif (coeff[0] == 0 and u_1[0][0] == 0) or (coeff[1] == 0 and u_1[0][1] == 0) or \
-                    (coeff[0] / coeff[1] == u_1[0][0] / u_1[0][1]):
-                if u_1[1] == 1 != length:
-                    counter = 0
-                    v_1 = None
-                    u_1 = None
-                    temp = None
-                    continue
-                counter = 0
-                temp = l
-                if temp[2][0][0] not in rem_pnts:
-                    rem_pnts.append(temp[2][0])
-            else:
-                counter = 1
-                v_1 = None
-                u_1 = None
-                temp = None
+            pass
+        last_line = l
 
     # To merge lines, remove other "intermediate" points
     final_pts = []
@@ -373,25 +335,34 @@ def speed():
         return abort()
 
 
+@app.route("/speed/", methods=['GET'])
+def get_speed():
+    return {"speed": robot_speed}
+
+
+@app.route("/overlap/", methods=['GET'])
+def get_overlap():
+    return {"overlap": overlap_percentage}
+
+
 @app.route("/overlap/", methods=['POST'])
 def overlap():
     global overlap_percentage
-    global overlap_dist
+    global min_overlap_dist
+    global max_overlap_dist
     try:
         data = request.get_json()
         requiredQuality = data["data"][0]['requiredQuality']["value"]
         if requiredQuality == "Low":
             overlap_percentage = 25
-            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
         if requiredQuality == "Medium":
-            overlap_percentage = 37
-            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+            overlap_percentage = 35
         elif requiredQuality == "High":
-            overlap_percentage = 50
-            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+            overlap_percentage = 45
         else:
             overlap_percentage = 25
-            overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        min_overlap_dist = sander_diameter * (100 - (overlap_percentage-5)) / 100
+        max_overlap_dist = sander_diameter * (100 - (overlap_percentage+5)) / 100
         logger.info(f"New overlap percentage: {overlap_percentage}")
         return "OK"
     except:
@@ -401,12 +372,14 @@ def overlap():
 @app.route("/diameter/", methods=['POST'])
 def diameter():
     global sander_diameter
-    global overlap_dist
+    global min_overlap_dist
+    global max_overlap_dist
     global overlap_offset
     try:
         data = request.get_json()
         sander_diameter = float(data["data"][0]['diameter']["value"])
-        overlap_dist = sander_diameter * (100 - overlap_percentage) / 100
+        min_overlap_dist = sander_diameter * (100 - (overlap_percentage-5)) / 100
+        max_overlap_dist = sander_diameter * (100 - (overlap_percentage+5)) / 100
         overlap_offset = sander_diameter * 25 / 100
         logger.info(f"New sander diameter: {sander_diameter}")
         return "OK"

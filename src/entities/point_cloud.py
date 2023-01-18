@@ -8,6 +8,17 @@ class PointCloud(Base):
         self.input_image_link = "urn:ngsi-ld:IMAGE:id:1"
         self.status = True
         self.error = "No error"
+        self.pcl = []
+        with open(r"../assets/raw_point_cloud.txt", "r") as d:
+            lines = [l.replace("\n", "") for l in d.readlines()]
+        for l in lines:
+            line = []
+            data = l.split("@")
+            for d in data:
+                if d != "":
+                    x, y, z = d.split("#")
+                    line.append({"x": float(x), "y": float(y), "z": float(z)})
+            self.pcl.append(line)
 
     def get(self):
         self.next()
@@ -22,33 +33,7 @@ class PointCloud(Base):
                 "value": self.input_image_link},
             "pointCloud": {
                 "type": "StructuredValue",
-                "value": [
-                    [{"y": 0, "x": 0, "z": -100},
-                     {"y": 20, "x": 0, "z": -100},
-                     {"y": 40, "x": 0, "z": -100},
-                     {"y": 60, "x": 0, "z": -100},
-                     {"y": 80, "x": 0, "z": -100}],
-                    [{"y": 0, "x": 20, "z": -100},
-                     {"y": 20, "x": 20, "z": 100},
-                     {"y": 40, "x": 20, "z": 100},
-                     {"y": 60, "x": 20, "z": 100 if self.id < 3 else -100},
-                     {"y": 80, "x": 20, "z": -100}],
-                    [{"y": 0, "x": 40, "z": -100},
-                     {"y": 20, "x": 40, "z": 100},
-                     {"y": 40, "x": 40, "z": 100},
-                     {"y": 60, "x": 40, "z": 100},
-                     {"y": 80, "x": 40, "z": -100}],
-                    [{"y": 0, "x": 60, "z": -100},
-                     {"y": 20, "x": 60, "z": 100},
-                     {"y": 40, "x": 60, "z": 100},
-                     {"y": 60, "x": 60, "z": 100 if self.id > 3 else -100},
-                     {"y": 80, "x": 60, "z": -100}],
-                    [{"y": 0, "x": 80, "z": -100},
-                     {"y": 20, "x": 80, "z": -100},
-                     {"y": 40, "x": 80, "z": -100},
-                     {"y": 60, "x": 80, "z": -100},
-                     {"y": 80, "x": 80, "z": -100}]
-                ]
+                "value": self.pcl,
             },
             "status": {
                 "type": "Boolean",

@@ -8,8 +8,11 @@ Since the ARP ROSE-AP component is a Flask application, you could execute HTTP r
 all benefits of using the FIWARE Orion Context Broker. If you want to know the API exposed by the ROSE-AP application, see [API](api.md).
 
 To start using ARP ROSE-AP (TrackGen), the user must create at least three FIWARE subscriptions:
+
 - subscription for the PointCloud entities (Orion must forward them to TrackGen);
+
 - subscription for the area parameter of the Device entities (Orion must forward them to TrackGen);
+
 - subscription for the Measurement entities (Orion must forward them to the Target application).
 
 A simple python script to communicate subscriptions to the FIWARE Orion context broker is provided. 
