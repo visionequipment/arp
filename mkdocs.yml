@@ -9,9 +9,9 @@ use_directory_urls: false
 theme: readthedocs
 pages:
   - Home: 'README.md'
+  - Architecture : 'architecture.md'
   - 'User & Programmers Manual':
-    - 'Architecture' : 'architecture.md'
-    - 'API' : 'api.md'
+    - 'Getting started' : 'getting-started'
     - 'User Guide': 'usermanual.md'
-  - 'Installation & Administration Manual': 
-    - 'Installation Guide': 'installationguide.md'
+    - 'API' : 'api.md'
+  - Installation Guide: 'installationguide.md'
