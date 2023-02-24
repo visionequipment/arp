@@ -1,0 +1,15 @@
+{
+    "id": "urn:ngsi-ld:ORBITALSANDER:id:1",
+    "description": "Orbital Sander",
+	"type": "Device",
+	"lastUpdate": "2022-06-09 06:00:10",
+	"name": "Sand1",
+	"serialNumber": "SND1",
+	"brand": "Example",
+	"model": "Ex121",
+	"status": "Off",
+	"error": "No error",
+	"extraParameters": [
+		{"diameter": 124.0}
+	]
+},

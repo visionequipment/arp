@@ -1,0 +1,63 @@
+{
+	"id": "urn:ngsi-ld:ROBOT:id:1",
+	"description": "Robot device",
+	"type": "Device",
+	"lastUpdate": "2022-06-09 06:00:10",
+	"name": "Robot1",
+	"serialNumber": "RBT1",
+	"brand": "Example",
+	"model": "Ex120",
+	"status": "Off",
+	"error": "No error",
+	"extraParameters": [
+		{
+			"parameter": "availableArea",
+			"value": [
+				{
+					"x": 0,
+					"y": 0,
+					"z": 0
+				},
+				{
+					"x": 1000,
+					"y": 0,
+					"z": 0
+				},
+				{
+					"x": 0,
+					"y": 1000,
+					"z": 0
+				},
+				{
+					"x": 1000,
+					"y": 1000,
+					"z": 0
+				},
+				{
+					"x": 0,
+					"y": 0,
+					"z": 1000
+				},
+				{
+					"x": 1000,
+					"y": 0,
+					"z": 1000
+				},
+				{
+					"x": 0,
+					"y": 1000,
+					"z": 1000
+				},
+				{
+					"x": 1000,
+					"y": 1000,
+					"z": 1000
+				}
+			]
+		},
+		{
+			"parameter": "speed",
+			"value": 0
+		}
+	]
+}

@@ -1,0 +1,63 @@
+{
+	"id": "urn:ngsi-ld:MEASUREMENT:id:1",
+    	"description": "Estimated trajectory",
+	"type": "Measurement",
+	"imageIdentifier": "urn:ngsi-ld:IMAGE:id:1",
+	"pointCloudIdentifier": "urn:ngsi-ld:POINTCLOUD:id:1",
+	"outputTrajectory": [
+            {
+               "x":40,
+               "y":20,
+               "z":100,
+               "time":0,
+               "side":"surface"
+            },
+            {
+               "x":40,
+               "y":60,
+               "z":100,
+               "time":0.008,
+               "side":"surface"
+            },
+            {
+               "x":20,
+               "y":20,
+               "z":100,
+               "time":0,
+               "side":"top"
+            },
+            {
+               "x":60,
+               "y":40,
+               "z":100,
+               "time":0.008944272,
+               "side":"right"
+            },
+            {
+               "x":40,
+               "y":60,
+               "z":100,
+               "time":0.005656854,
+               "side":"right"
+            },
+            {
+               "x":20,
+               "y":60,
+               "z":100,
+               "time":0.004,
+               "side":"top"
+            },
+            {
+               "x":20,
+               "y":20,
+               "z":100,
+               "time":0.008,
+               "side":"top"
+            }
+         ],
+	"status": true,
+	"error": "No error",
+	"overlap": false,
+	"pointDensity": 0.1,
+	"estimatedWorkpieceProcessingTime": 7.4
+}

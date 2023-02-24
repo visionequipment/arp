@@ -1,0 +1,84 @@
+{
+	"description": "This entity represents the current operation of a device",
+	"type": {
+		"type": "string",
+		"enum": [
+			"DeviceOperation"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"activeRecipe": {
+		"type": "string",
+		"description": "Property. A string which denotes the specific operation"
+		},
+	"typeOfMaterial": {
+		"type": "string",
+		"description": "Property. A string which denotes the type of material used for this operation"
+		},
+	"requiredQuality": {
+		"type": "string",
+		"description": "Property. A string which denotes the required quality of the result"
+		},
+	"operator": {
+		"type": "string",
+		"description": "Property. A string which denotes the identifier of the operator"
+		},
+	"deviceIdentifier": {
+		"type": "string",
+		"format": "uri",
+		"description": "Relationship. Reference to the device that is performing this operation"
+		},
+	"session": {
+		"type": "string",
+		"description": "Property. A string which denotes the current session"
+		},
+	"status": {
+		"type": "string",
+		"enum": [
+			"Started",
+			"Running",
+			"Error",
+			"Finished"
+			],
+		"description": "Property. A string which denotes the operation status"
+		},
+	"operatingValue": {
+		"type": "number",
+		"description": "Property. A number which denotes the working value of a physical quantity of the device that is performing the operation"
+	},
+	"nominalValue": {
+		"type": "number",
+		"description": "Property. A number which denotes the nominal value of a physical quantity of the device that is performing the operation."
+	},
+	"start": {
+		"type": "string",
+		"format": "date-time",
+		"description": "Property. A timestamp which denotes when the operation started."
+	},
+	"end": {
+		"type": "string",
+		"format": "date-time",
+		"description": "Property. A timestamp which denotes the estimated or actual date and time of completion of the operation."
+	},
+	"progress": {
+		"type": "number",
+		"minimum": 0,
+		"maximum": 100,
+		"description": "Property. A number which denotes the progress of the operation."
+	},
+	"extraParameters": {
+		"type": "StructuredValue",
+		"description": "Property. StructuredValue. This structured value denotes extra parameters",
+		"value": [{
+			"parameter": {
+				"type": "string"
+			},
+			"value": {
+				"type": "number",
+				"minimum": 0,
+				"maximum": 100,
+				"description": "Property. Percentage value of an extra parameter"
+			}
+		}]
+	}
+}

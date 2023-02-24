@@ -1,0 +1,62 @@
+{
+	"description": "This entity represents the device",
+	"type": {
+		"type": "string",
+		"enum": [
+			"Device"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"lastUpdate": {
+		"type": "string",
+		"format": "date-time",
+		"description": "Property. A timestamp which denotes when the mechanical status was last seen."
+		},
+	"name": {
+		"type": "string",
+		"description": "Property. A string which denotes the name of the device"
+		},
+	"serialNumber": {
+		"type": "string",
+		"description": "Property. A string which denotes the serial number of the device"
+		},
+	"brand": {
+		"type": "string",
+		"description": "Property. A string which denotes the brand of the device"
+		},
+	"model": {
+		"type": "string",
+		"description": "Property. A string which denotes the model of the device"
+		},
+	"status": {
+		"type": "string",
+		"enum": [
+			"Idle",
+			"On",
+			"Off"
+			],
+		"description": "Property. A string which denotes the device status"
+		},
+	"error": {
+		"type": "string",
+		"enum": [
+			"No error",
+			"Some errors occurred",
+			"Hardware error"
+			],
+		"description": "Property. A string which denotes whether errors have occurred"
+		},
+	"extraParameters": {
+		"type": "StructuredValue",
+		"description": "Property. StructuredValue. This structured value denotes extra parameters",
+		"value": [{
+			"parameter": {
+				"type": "string"
+			},
+			"value": {
+				"type": ["number", "object"],
+				"description": "Property. Value of an extra parameter"
+			}
+		}]
+	}
+}

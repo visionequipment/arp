@@ -1,10 +1,10 @@
 # User Manual
 
 You can find the whole software and hardware requirements in [Architecture](architecture.md).
+ 
+To run simulation script and tests, [Python 3](https://www.python.org/downloads/) is required. 
 
 ## Usage
-
-If you want to know the API exposed by the ROSE-AP application, see [API](api.md).
 
 To start using ARP ROSE-AP (TrackGen), the user must create at least two FIWARE subscriptions on the Orion context broker:
 
@@ -25,9 +25,11 @@ After subscriptions are created, the user can generate point clouds and send the
 To overwrite TrackGen application parameters (robot speed, sander diameter and overlap percentage), user should create other subscriptions
 on the Orion context broker.
 
+If you want to know all APIs exposed by the ROSE-AP application, see [API](api.md).
+
 ## Simulation
 
-If operator doesn't have access to hardware, he can simulate point cloud with additional software provided.
+If operator doesn't have access to hardware, she/he can simulate point cloud with additional software provided.
 
 TrackGen will receive the NGSI entities from the Orion context broker and will answer with NGSI Measurement entities, that are the output trajectories. 
 The Orion context broker will forward the NGSI Measurement entities to the Target application.

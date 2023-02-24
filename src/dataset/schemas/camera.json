@@ -1,0 +1,67 @@
+{
+	"description": "This entity represents a camera",
+	"type": {
+		"type": "string",
+		"enum": [
+			"Camera"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"name": {
+		"type": "string",
+		"description": "Property. A string which denotes the name of the camera"
+		},
+	"serialNumber": {
+		"type": "string",
+		"description": "Property. A string which denotes the serial number of the camera"
+		},
+	"brand": {
+		"type": "string",
+		"description": "Property. A string which denotes the brand of the camera"
+		},
+	"model": {
+		"type": "string",
+		"description": "Property. A string which denotes the model of the camera"
+		},
+	"dateCreated": {
+		"type": "string",
+        "format": "date-time",
+		"description": "Property. A timestamp which denotes when this entity has been created."
+		},
+	"startDateTime": {
+		"type": "string",
+        "format": "date-time",
+		"description": "Property. A timestamp which denotes when the camera has started the initialization."
+		},
+	"endDateTime": {
+		"type": "string",
+        "format": "date-time",
+		"description": "Property. A timestamp which denotes when the camera has completed the initialization."
+		},
+	"status": {
+		"type": "string",
+		"enum": [
+			"Idle",
+			"On",
+			"Off"
+			],
+		"description": "Property. A string which denotes the camera status."
+		},
+	"hardwareTrigger": {
+		"type": "boolean",
+		"description": "Property. A boolean which denotes whether the hardware trigger mode is active or not."
+		},
+	"exposure": {
+		"type": "number",
+		"description": "Property. A number which denotes the camera exposure."
+		},
+	"error": {
+		"type": "string",
+		"enum": [
+			"No error",
+			"Some errors occurred",
+			"Hardware error"
+			],
+		"description": "Property. A string which denotes whether errors have occurred"
+		}
+}

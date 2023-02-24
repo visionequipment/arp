@@ -1,0 +1,46 @@
+{
+	"description": "This entity represents the image acquired by a camera",
+	"type": {
+		"type": "string",
+		"enum": [
+			"Image"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"dateCaptured": {
+		"type": "string",
+        "format": "date-time",
+		"description": "Property. A timestamp which denotes when the image was acquired."
+		},
+	"imageResolution":  {
+		"type": "object",
+		"properties": {
+			"height": {
+				"type": "number",
+				"minimum": 0
+			},
+			"width": {
+				"type": "number",
+				"minimum": 0
+			},
+		},
+		"description": "Property. An object which denotes image resolution."
+		},
+	"imageFormat":  {
+		"type": "string",
+		"enum": [
+			"RGB",
+			"Mono"
+			],
+		"description": "Property. A string which denotes whether the image type is RGB or monochromatic."
+		},
+	"linkToImage": {
+		"type": "string",
+		"description": "Property. A string which denotes the link to where the image was saved."
+		},
+	"cameraIdentifier": {
+		  "type": "string",
+		  "format": "uri",
+		  "description": "Relationship. Reference to the camera that acquired the image"
+		}
+}

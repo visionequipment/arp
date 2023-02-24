@@ -1,0 +1,46 @@
+{
+	"description": "This entity represents the result of computation performed by a vision system",
+	"type": {
+		"type": "string",
+		"enum": [
+			"PointCloud"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"imageIdentifier": {
+		"type": "string",
+		"format": "uri",
+		"description": "Relationship. Reference to the image from which this result is produced."
+		},
+	"pointCloud":  {
+		"type": "StructuredValue",
+		"description": "Property. StructuredValue. This structured value denotes the point cloud",
+		"value": [[
+			{
+				"x": {
+					"type": "number",
+					"minimum": 0
+					},
+				"y": {
+					"type": "number",
+					"minimum": 0
+					},
+				"z": {
+					"type": "number",
+					"minimum": 0
+					}
+			}]]
+		},
+	"status": {
+		"type": "boolean",
+		"description": "Property. A boolean which denotes the result status"
+		},
+	"error": {
+		"type": "string",
+		"enum": [
+			"No error",
+			"Some errors occurred"
+			],
+		"description": "Property. A string which denotes whether errors have occurred"
+		}
+}

@@ -1,0 +1,13 @@
+{
+    "id": "urn:ngsi-ld:CONVEYOR:id:1",
+    "description": "Conveyor belt",
+	"type": "Device",
+	"lastUpdate": "2022-06-09 06:00:10",
+	"name": "Conv1",
+	"serialNumber": "CONV1",
+	"brand": "Example",
+	"model": "Ex124",
+	"status": "Off",
+	"error": "No error",
+	"extraParameters": [{"parameter": "speed", "value": 1}]
+}

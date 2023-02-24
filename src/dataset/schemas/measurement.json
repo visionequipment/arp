@@ -1,0 +1,80 @@
+{
+	"description": "This entity represents the result of computation performed by a trajectory estimator",
+	"type": {
+		"type": "string",
+		"enum": [
+			"Measurement"
+			],
+		"description": "Property. NGSI Entity type."
+		},
+	"imageIdentifier": {
+		"type": "string",
+		"format": "uri",
+		"description": "Relationship. Reference to the image from which this result is produced."
+		},
+	"pointCloudIdentifier": {
+		"type": "string",
+		"format": "uri",
+		"description": "Relationship. Reference to the point cloud from which this result is derived."
+		},
+	"outputTrajectory":  {
+		"type": "StructuredValue",
+		"description": "Property. StructuredValue. This structured value denotes the output trajectory",
+		"value": [{
+				"x": {
+					"type": "number",
+					"minimum": 0
+					},
+				"y": {
+					"type": "number",
+					"minimum": 0
+					},
+				"z": {
+					"type": "number",
+					"minimum": 0
+					},
+				"time": {
+					"type": "number",
+					"minimum": 0
+					},
+				"side": {
+					"type": "string",
+					"enum": [
+						"surface",
+						"top",
+						"left",
+						"bottom",
+						"right"
+						],
+					"description": "Property. A string which denotes which side is processed"
+					}
+				}
+			]
+		},
+	"status": {
+		"type": "boolean",
+		"description": "Property. A boolean which denotes the result status"
+		},
+	"error": {
+		"type": "string",
+		"enum": [
+			"No error",
+			"Some errors occurred"
+			],
+		"description": "Property. A string which denotes whether errors have occurred"
+		},
+	"overlap": {
+		"type": "boolean",
+		"description": "Property. A boolean which denotes whether the output trajectory has overlapping points"
+		},
+	"pointDensity": {
+		"type": "number",
+		"minimum": 0,
+		"description": "Property. A number which denotes the point density of the output trajectory"
+		},
+	"estimatedWorkpieceProcessingTime": {
+		"type": "number",
+		"minimum": 0,
+		"description": "Property. A number which denotes the estimated time to complete operation"
+	}
+}

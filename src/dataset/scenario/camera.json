@@ -1,0 +1,16 @@
+{
+	"id": "urn:ngsi-ld:CAMERA:id:1",
+	"description": "Industrial camera",
+	"type": "Camera",
+	"name": "ExampleCam",
+	"serialNumber": "CAM_0001",
+	"brand": "Example",
+	"model": "Ex123",
+	"dateCreated": "2022-06-09 06:00:10",
+	"startDateTime": "2022-06-09 06:00:00",
+	"endDateTime": "2022-06-09 06:00:10",
+	"status": "On",
+	"hardwareTrigger": false,
+	"exposure": 1000,
+	"error": "No error"
+}

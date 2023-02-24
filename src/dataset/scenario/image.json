@@ -1,0 +1,13 @@
+{
+	"id": "urn:ngsi-ld:IMAGE:id:1",
+    "description": "Image acquired by a camera",
+	"type": "Image",
+	"cameraIdentifier": "urn:ngsi-ld:CAMERA:id:1",
+	"dateCaptured": "2022-06-09 06:01:01",
+	"imageResolution":  {
+      "height": 768,
+      "width": 1080
+    },
+	"imageFormat": "Mono8",
+	"linkToImage": ""
+}
