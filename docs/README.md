@@ -6,8 +6,8 @@
 This project is part of [DIH^2](http://www.dih-squared.eu/). For more information check the RAMP Catalogue entry for the components.
 This repository contains the ROSE-AP component (TrackGen) and other components developed for the TTE.
 
-| :books: [Documentation](https://arp.readthedocs.io/en/latest) |
-| --------------------------------------------- | 
+| :books: [Documentation](https://arp.readthedocs.io/en/latest) | :tv: [Step by Step](https://youtu.be/pvIdWql2WiU) |     
+| --------------------------------------------- | --------------------------------------------- |   
 
 
 ## Background

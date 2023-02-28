@@ -1,5 +1,10 @@
 # Getting started
 
+Check out the Step by Step tutorial video.
+
+| :tv: [Step by Step](https://youtu.be/pvIdWql2WiU) |     
+| --------------------------------------------- |    
+
 ## Start application
 
 To start working with this ROSE-AP - that we call TrackGen - the user must first install it. PLease see the 
