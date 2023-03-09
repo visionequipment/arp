@@ -70,3 +70,8 @@ Entities should be created in this order:
 7. [point cloud](scenario/pointcloud.json)
 
 8. (if ROSE-AP and Orion are running, this is not needed) [measurement](scenario/measurement.json)
+
+At [this link](data.json) there is the result of a successful scenario that contains: DeviceOperation entity at the start of the operation,
+PointCloud entity, Measurement entity and final DeviceOperation entity when operation is complete. 
+
+Data was extracted from the FIWARE QuantumLeap service, which only tracks specific attributes of each entity.
